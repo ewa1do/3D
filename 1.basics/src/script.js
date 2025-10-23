@@ -1,47 +1,111 @@
 import * as THREE from "three";
-
-// We need 4 elements to get started:
-
-// * 1.  A scene that will contain objects
-const scene = new THREE.Scene();
-
-// * 2. Some objects
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-
-// ? MESH: Combination of geometry (shape) and a material (how it looks)
-const mesh = new THREE.Mesh(geometry, material);
-
-// Adding the object to scene
-scene.add(mesh);
-
-// * 3. A camera
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 /**
- * ? The camera is not visible. It's more like a theoretical point of view.
-   When we will do a render of your scene, it will be from that camera's point of view.
+ * Cursor
  */
 
-const sizes = {
-  width: 600,
-  height: 600,
+console.log(OrbitControls);
+
+const cursor = {
+    x: 0,
+    y: 0,
 };
 
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
-camera.position.z = 4;
-scene.add(camera);
+window.addEventListener("mousemove", (e) => {
+    cursor.x = e.clientX / sizes.width - 0.5;
+    cursor.y = -(e.clientY / sizes.height - 0.5);
+});
 
-// * 4. A renderer
-
-// ? We will simply ask the renderer to render our scene from the camera's point of view,
-// ? and the result will be drawn into a canvas.
-
-// ! Canvas
+/**
+ * Base
+ */
+// Canvas
 const canvas = document.querySelector("canvas.webgl");
 
-// ! Renderer
-const renderer = new THREE.WebGLRenderer({ canvas });
-renderer.setSize(sizes.width, sizes.width);
+// Sizes
+const sizes = {
+    width: 800,
+    height: 600,
+};
 
-// * First render
-renderer.render(scene, camera);
+// Scene
+const scene = new THREE.Scene();
+
+// Object
+const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1, 5, 5, 5),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 }),
+);
+scene.add(mesh);
+
+// Camera
+
+const fov = 75;
+const aspectRatio = sizes.width / sizes.height;
+const near = 0.1;
+const far = 100;
+// Any object closer than near or further than far will not show up
+const camera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
+
+// const left = -1;
+// const right = 1;
+// const top = 1;
+// const bottom = -1;
+// const camera = new THREE.OrthographicCamera(-1 * aspectRatio, 1 * aspectRatio, 1, -1, near, far);
+
+// camera.position.x = 2;
+// camera.position.y = 2;
+camera.position.z = 3;
+// console.log(camera.position.length());
+camera.lookAt(mesh.position);
+scene.add(camera);
+
+// Controls
+const controls = new OrbitControls(camera, canvas);
+// controls.target.y = 2;
+controls.enableDamping = true;
+// controls.autoRotate = true;
+controls.keys = {
+    LEFT: "ArrowLeft", //left arrow
+    UP: "ArrowUp", // up arrow
+    RIGHT: "ArrowRight", // right arrow
+    BOTTOM: "ArrowDown", // down arrow
+};
+// controls.update();
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+});
+renderer.setSize(sizes.width, sizes.height);
+
+// Animate
+const clock = new THREE.Clock();
+
+const tick = () => {
+    const elapsedTime = clock.getElapsedTime();
+
+    // Update objects
+    // mesh.rotation.y = elapsedTime;
+
+    // Update camera
+    // camera.position.x = cursor.x * 10 ;
+    // camera.position.y = cursor.y * 10;
+    // camera.position.x = Math.sin(cursor.x * (Math.PI * 2)) * 3;
+    // camera.position.z = Math.cos(cursor.x * (Math.PI * 2)) * 3;
+    // camera.position.y = cursor.y * 5;
+    // camera.lookAt(mesh.position);
+    // camera.lookAt(new THREE.Vector3());
+
+    // Update controls
+    controls.update();
+
+    // Render
+    renderer.render(scene, camera);
+
+    // Call tick again on the next frame
+    window.requestAnimationFrame(tick);
+};
+
+tick();
