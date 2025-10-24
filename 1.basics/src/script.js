@@ -1,47 +1,94 @@
+import "./style.css";
 import * as THREE from "three";
-
-// We need 4 elements to get started:
-
-// * 1.  A scene that will contain objects
-const scene = new THREE.Scene();
-
-// * 2. Some objects
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-
-// ? MESH: Combination of geometry (shape) and a material (how it looks)
-const mesh = new THREE.Mesh(geometry, material);
-
-// Adding the object to scene
-scene.add(mesh);
-
-// * 3. A camera
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 /**
- * ? The camera is not visible. It's more like a theoretical point of view.
-   When we will do a render of your scene, it will be from that camera's point of view.
+ * Base
  */
-
-const sizes = {
-  width: 600,
-  height: 600,
-};
-
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
-camera.position.z = 4;
-scene.add(camera);
-
-// * 4. A renderer
-
-// ? We will simply ask the renderer to render our scene from the camera's point of view,
-// ? and the result will be drawn into a canvas.
-
-// ! Canvas
+// Canvas
 const canvas = document.querySelector("canvas.webgl");
 
-// ! Renderer
-const renderer = new THREE.WebGLRenderer({ canvas });
-renderer.setSize(sizes.width, sizes.width);
+// Scene
+const scene = new THREE.Scene();
 
-// * First render
-renderer.render(scene, camera);
+/**
+ * Object
+ */
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+
+/**
+ * Sizes
+ */
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+};
+
+window.addEventListener("resize", () => {
+    // Update sizes
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
+
+    // Update camera
+    camera.aspect = sizes.width / sizes.height;
+    camera.updateProjectionMatrix();
+
+    // Update renderer
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+window.addEventListener("dblclick", () => {
+    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+
+    if (!fullscreenElement) {
+        canvas.requestFullscreen();
+        return;
+    }
+
+    document.exitFullscreen();
+});
+
+/**
+ * Camera
+ */
+// Base camera
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
+camera.position.z = 3;
+scene.add(camera);
+
+// Controls
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+
+/**
+ * Renderer
+ */
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+});
+renderer.setSize(sizes.width, sizes.height);
+
+/**
+ * Animate
+ */
+const clock = new THREE.Clock();
+
+const tick = () => {
+    const elapsedTime = clock.getElapsedTime();
+
+    // Update controls
+    controls.update();
+
+    // Render
+    renderer.render(scene, camera);
+    // renderer.setSize(sizes.width, sizes.height);
+
+    // Call tick again on the next frame
+    window.requestAnimationFrame(tick);
+};
+
+tick();
